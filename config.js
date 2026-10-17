@@ -16,21 +16,18 @@ module.exports = {
   ],
 
   ticket: {
-    maxPerUser: 1,
+    maxPerUser: 25,
+    panelStyle: 'list', // keeps the original look
     panelTitle: 'StrafeSMP Support',
-    panelStyle: 'grid', // 'grid' | 'dropdown' | 'list'
-    banner: '', // optional: direct https image link
-    thumbnail: '', // optional: direct https image link
-    panelDescription: 'Choose a ticket type below. Reports and ban appeals are handled here.',
-    panelFooter: 'Opening a ticket you do not need may result in a punishment.',
+    panelDescription: 'Need a hand? Pick a category below and a staff member will be with you shortly.',
+    panelFooter: 'Spam tickets or false reports may lead to a punishment.',
     // style: Success (green) | Danger (red) | Primary (blue) | Secondary (grey)
     types: [
-      { id: 'general', label: 'General Support', emoji: '✅', style: 'Success', description: 'Get help with the server or your account.', welcome: 'Staff will be with you shortly. Explain your issue in detail.' },
-      { id: 'report', label: 'Player Reports', emoji: '⚠️', style: 'Danger', description: 'Report a player with clear evidence.', welcome: 'Include the player name, what happened, and screenshots or clips.' },
-      { id: 'bug', label: 'Bug Reports', emoji: '🐞', style: 'Primary', description: 'Report a bug, exploit, or glitch.', welcome: 'Explain how to reproduce the bug. Do not abuse exploits.' },
-      { id: 'claims', label: 'Claims & Perks', emoji: '🪙', style: 'Secondary', description: 'Ask about an existing claim or reward request.', welcome: 'Include your in-game name and what you are trying to claim.' },
-      { id: 'appeal', label: 'Ban Appeal', emoji: '⚖️', style: 'Secondary', description: 'Ask staff to review a ban decision.', welcome: 'Include your in-game name, ban reason, and why it should be lifted.' },
-      { id: 'refunds', label: 'Refunds', emoji: '↩️', style: 'Primary', description: 'Request a refund through the existing review process.', welcome: 'Include your order ID and the reason for the refund.' },
+      { id: 'general', label: 'General Support', emoji: '💬', style: 'Success', description: 'Questions about the server, your account or anything else.', welcome: 'Thanks for reaching out! Tell us what you need and staff will reply soon.' },
+      { id: 'report', label: 'Player Reports', emoji: '🚨', style: 'Danger', description: 'Report cheaters, griefers or rule breakers. Evidence required.', welcome: 'Send the player name, what happened, and screenshots or clips as proof.' },
+      { id: 'bug', label: 'Bug Reports', emoji: '🛠️', style: 'Primary', description: 'Found a bug, glitch or exploit? Let us know.', welcome: 'Explain how to reproduce it. Please do not abuse exploits.' },
+      { id: 'claims', label: 'Claims & Perks', emoji: '🚚', style: 'Secondary', description: 'Rewards, ranks and store perks you have not received.', welcome: 'Send your in-game name and what you are trying to claim.' },
+      { id: 'appeal', label: 'Ban Appeal', emoji: '🔓', style: 'Secondary', description: 'Think a punishment was a mistake? Ask for a review.', welcome: 'Send your in-game name, the ban reason, and why it should be lifted.' },
     ],
   },
 };
