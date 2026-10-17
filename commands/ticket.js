@@ -1,7 +1,7 @@
 const {
   ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, ContainerBuilder, SectionBuilder, TextDisplayBuilder,
   SeparatorBuilder, SeparatorSpacingSize, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle,
-  PermissionFlagsBits: P, AttachmentBuilder,
+  PermissionFlagsBits: P, AttachmentBuilder, MediaGalleryBuilder, MediaGalleryItemBuilder, StringSelectMenuBuilder, ThumbnailBuilder,
 } = require('discord.js');
 const config = require('../config');
 const db = require('../lib/db');
@@ -13,20 +13,48 @@ const typeOf = (id) => config.ticket.types.find((t) => t.id === id);
 const isStaff = (m, g) => m.permissions.has(P.ManageChannels) || (g.settings.staffRole && m.roles.cache.has(g.settings.staffRole));
 const ALLOW = [P.ViewChannel, P.SendMessages, P.ReadMessageHistory, P.AttachFiles, P.EmbedLinks];
 
-// ---------- panel (Components V2: text + button rows inside a coloured container) ----------
+// ---------- panel ----------
+// config.ticket.panelStyle: 'grid' (default, compact buttons) | 'dropdown' (one select menu) | 'list' (button beside each type)
+// optional: config.ticket.banner (https image URL) and config.ticket.thumbnail (https image URL)
+const typeButton = (t) => new ButtonBuilder().setCustomId(`ticket:open:${t.id}`).setLabel(t.label).setEmoji(t.emoji).setStyle(ButtonStyle[t.style] || ButtonStyle.Secondary);
+const gap = (big) => new SeparatorBuilder().setDivider(true).setSpacing(big ? SeparatorSpacingSize.Large : SeparatorSpacingSize.Small);
+
 function buildPanel() {
+  const cfg = config.ticket;
+  const style = cfg.panelStyle || 'grid';
   const c = new ContainerBuilder().setAccentColor(config.colors.primary);
-  c.addTextDisplayComponents(new TextDisplayBuilder().setContent(`# 🎟️ ${config.ticket.panelTitle}\n${config.ticket.panelDescription}`));
-  for (const t of config.ticket.types) {
-    c.addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small));
-    c.addSectionComponents(
-      new SectionBuilder()
+
+  if (cfg.banner) c.addMediaGalleryComponents(new MediaGalleryBuilder().addItems(new MediaGalleryItemBuilder().setURL(cfg.banner)));
+
+  const head = new TextDisplayBuilder().setContent(`# ${cfg.panelTitle}\n${cfg.panelDescription}`);
+  if (cfg.thumbnail) c.addSectionComponents(new SectionBuilder().addTextDisplayComponents(head).setThumbnailAccessory(new ThumbnailBuilder().setURL(cfg.thumbnail)));
+  else c.addTextDisplayComponents(head);
+
+  if (style === 'list') {
+    for (const t of cfg.types) {
+      c.addSeparatorComponents(gap());
+      c.addSectionComponents(new SectionBuilder()
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(`### ${t.emoji} ${t.label}\n${t.description}`))
-        .setButtonAccessory(new ButtonBuilder().setCustomId(`ticket:open:${t.id}`).setLabel('Open').setEmoji(t.emoji).setStyle(ButtonStyle[t.style] || ButtonStyle.Primary)),
-    );
+        .setButtonAccessory(typeButton(t).setLabel('Open')));
+    }
+  } else {
+    c.addSeparatorComponents(gap(true));
+    c.addTextDisplayComponents(new TextDisplayBuilder().setContent(cfg.types.map((t) => `${t.emoji} **${t.label}**\n-# ${t.description}`).join('\n\n')));
+    c.addSeparatorComponents(gap(true));
+    if (style === 'dropdown') {
+      c.addActionRowComponents(new ActionRowBuilder().addComponents(
+        new StringSelectMenuBuilder().setCustomId('ticket:select').setPlaceholder('Select a ticket type...').addOptions(
+          cfg.types.map((t) => ({ label: t.label, description: t.description.slice(0, 100), value: t.id, emoji: t.emoji })),
+        ),
+      ));
+    } else {
+      for (let n = 0; n < cfg.types.length; n += 3) {
+        c.addActionRowComponents(new ActionRowBuilder().addComponents(cfg.types.slice(n, n + 3).map(typeButton)));
+      }
+    }
   }
-  c.addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small));
-  c.addTextDisplayComponents(new TextDisplayBuilder().setContent(`-# ${config.ticket.panelFooter}`));
+  c.addSeparatorComponents(gap());
+  c.addTextDisplayComponents(new TextDisplayBuilder().setContent(`-# ${cfg.panelFooter}`));
   return { components: [c], flags: MessageFlags.IsComponentsV2 };
 }
 
@@ -161,6 +189,7 @@ async function closePrompt(i) {
 
 async function handle(i) {
   const [, action, arg] = i.customId.split(':');
+  if (i.isStringSelectMenu() && action === 'select') return openModal(i, i.values[0]);
   if (i.isButton()) {
     if (action === 'open') return openModal(i, arg);
     if (action === 'claim') return claim(i);
@@ -263,3 +292,4 @@ const subs = [
 ];
 
 module.exports = { ...group('ticket', 'Ticket system', subs), handle };
+    
